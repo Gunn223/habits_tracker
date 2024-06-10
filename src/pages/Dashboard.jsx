@@ -1,15 +1,43 @@
 import React, { useState } from "react";
 import { Bar, Line, Chart } from "react-chartjs-2";
 import { useJwt } from "react-jwt";
+import ModalComp from "../components/ModalComp";
+import { User } from "../services/db/users";
 const Dashboard = ({ CloseSidebar }) => {
+  const [openModal, setOpenModal] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [data, setData] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
   const { decodedToken, isExpired, reEvaluateToken } = useJwt(
     sessionStorage.getItem("auth")
   );
+
   const toggleSidebar = () => {
     const newSidebarState = !isSidebarOpen;
     setIsSidebarOpen(newSidebarState);
     CloseSidebar(newSidebarState);
+  };
+  const handleonChange = (event) => {
+    const { name, value } = event.target;
+
+    setData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
+  const handlRegisterUser = async (e) => {
+    e.preventDefault();
+    try {
+      const user = new User(data.name, data.password, data.email);
+      user.retriveUsers();
+      const response = await user.addUser();
+      console.log(response);
+    } catch (error) {
+      console.log(`error handle register user`);
+    }
   };
   return (
     <div id="content-wrapper" class="d-flex flex-column">
@@ -56,13 +84,10 @@ const Dashboard = ({ CloseSidebar }) => {
                   aria-haspopup="true"
                   aria-expanded="false"
                 >
-                  <span class="mr-2 d-none d-lg-inline text-gray-600 small">
-                    habit Tracker
+                  <span className="d-flex align-items-center gap-1">
+                    <button>Login</button>
+                    <button onClick={() => setOpenModal(true)}>Register</button>
                   </span>
-                  <img
-                    class="img-profile rounded-circle"
-                    src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/OOjs_UI_icon_userAvatar-progressive.svg/1024px-OOjs_UI_icon_userAvatar-progressive.svg.png"
-                  />
                 </div>
               )}
             </li>
@@ -153,6 +178,57 @@ const Dashboard = ({ CloseSidebar }) => {
           </div>
         </div>
       </footer>
+      {openModal && (
+        <ModalComp isOpen={(state) => setOpenModal(state)}>
+          <form onSubmit={handlRegisterUser}>
+            <div class="form-group">
+              <label for="fullname">Full Name</label>
+              <input
+                type="text"
+                class="form-control"
+                id="fullname"
+                placeholder="Enter your full name"
+                required
+                name="name"
+                onChange={handleonChange}
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="email">Email address</label>
+              <input
+                type="email"
+                class="form-control"
+                id="email"
+                name="email"
+                placeholder="Enter your email"
+                required
+                onChange={handleonChange}
+              />
+              <small class="form-text text-muted">
+                We'll never share your email with anyone else.
+              </small>
+            </div>
+
+            <div class="form-group">
+              <label for="password">Password</label>
+              <input
+                type="password"
+                class="form-control"
+                id="password"
+                placeholder="Password"
+                required
+                name="password"
+                onChange={handleonChange}
+              />
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+              Submit
+            </button>
+          </form>
+        </ModalComp>
+      )}
     </div>
   );
 };

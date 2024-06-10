@@ -19,10 +19,12 @@ import { handlePopUpProvider } from "./services/providers/firebasePopUp.js";
 import { encodeUser } from "./utils/encodeJwt.js";
 import HabitsPage from "./pages/HabitsPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
+import { formattedErrorCode } from "./utils/FormaterErrorCode.js";
 function App() {
   const [toggle, setToggle] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [comp, setComp] = useState(<Dashboard />);
+  const [errMessage, setErrMessage] = useState("");
   const [formData, setformData] = useState({
     email: "",
     password: "",
@@ -58,6 +60,10 @@ function App() {
         );
       }
     } catch (error) {
+      setErrMessage(formattedErrorCode(error.code));
+      setTimeout(() => {
+        setErrMessage("");
+      }, 3000);
       console.log("error login", error);
     }
   };
@@ -128,10 +134,7 @@ function App() {
 
               <hr class="sidebar-divider" />
               <div class="sidebar-heading">Main</div>
-              <li
-                class="nav-item"
-                onClick={() => handleRoute("dashboard")}
-              >
+              <li class="nav-item" onClick={() => handleRoute("dashboard")}>
                 <span class="nav-link">
                   <i class="fas fa-fw fa-tachometer-alt"></i>
                   <span>Dashboard</span>
@@ -219,8 +222,9 @@ function App() {
           </div>
         </div>
         {openModal && (
-          <ModalComp title={"Sign In"} isOpen={(state) => setOpenModal(state)}>
+          <ModalComp title={"Sign Up"} isOpen={(state) => setOpenModal(state)}>
             <form onSubmit={handleOnLoginSubmit}>
+              {errMessage && <p className="text-danger">{errMessage}</p>}
               <div class="mb-3">
                 <label for="exampleInputEmail1" class="form-label">
                   Email address
