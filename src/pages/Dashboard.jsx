@@ -3,14 +3,23 @@ import { Bar, Line, Chart } from "react-chartjs-2";
 import { useJwt } from "react-jwt";
 import ModalComp from "../components/ModalComp";
 import { User } from "../services/db/users";
+import swal from "sweetalert";
+import { encodeUser } from "../utils/encodeJwt";
+import { getIatOneDayFromNow } from "../utils/dateFormater";
+import { confirmSwal } from "../utils/SweetAlert";
+
 const Dashboard = ({ CloseSidebar }) => {
   const [openModal, setOpenModal] = useState(false);
+  const [openModalLogin, setOpenModalLogin] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [data, setData] = useState({
     name: "",
     email: "",
     password: "",
   });
+  const user = new User();
+
   const { decodedToken, isExpired, reEvaluateToken } = useJwt(
     sessionStorage.getItem("auth")
   );
@@ -31,12 +40,34 @@ const Dashboard = ({ CloseSidebar }) => {
   const handlRegisterUser = async (e) => {
     e.preventDefault();
     try {
-      const user = new User(data.name, data.password, data.email);
-      user.retriveUsers();
-      const response = await user.addUser();
+      const response = await user.addUser(data.email, data.name, data.password);
       console.log(response);
     } catch (error) {
       console.log(`error handle register user`);
+    }
+  };
+  const handleLoginUser = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await user.userLogin(data.name, data.password);
+
+      if (res.statusCode === 400 || res.statusCode === 404) {
+        setErrorMessage(res.message);
+
+        setTimeout(() => {
+          setErrorMessage("");
+        }, 3000);
+      }
+      if (res.statusCode == 200) {
+        encodeUser({
+          sub: res.data.userId,
+          name: res.data.user,
+          iat: getIatOneDayFromNow(),
+        });
+        setOpenModalLogin(confirmSwal("Login Success!", res.message, true));
+      }
+    } catch (error) {
+      console.log(`error handle login user ${error.message}`);
     }
   };
   return (
@@ -85,7 +116,9 @@ const Dashboard = ({ CloseSidebar }) => {
                   aria-expanded="false"
                 >
                   <span className="d-flex align-items-center gap-1">
-                    <button>Login</button>
+                    <button onClick={() => setOpenModalLogin(true)}>
+                      Login
+                    </button>
                     <button onClick={() => setOpenModal(true)}>Register</button>
                   </span>
                 </div>
@@ -179,7 +212,7 @@ const Dashboard = ({ CloseSidebar }) => {
         </div>
       </footer>
       {openModal && (
-        <ModalComp isOpen={(state) => setOpenModal(state)}>
+        <ModalComp title={"Sign Up"} isOpen={(state) => setOpenModal(state)}>
           <form onSubmit={handlRegisterUser}>
             <div class="form-group">
               <label for="fullname">Full Name</label>
@@ -208,6 +241,45 @@ const Dashboard = ({ CloseSidebar }) => {
               <small class="form-text text-muted">
                 We'll never share your email with anyone else.
               </small>
+            </div>
+
+            <div class="form-group">
+              <label for="password">Password</label>
+              <input
+                type="password"
+                class="form-control"
+                id="password"
+                placeholder="Password"
+                required
+                name="password"
+                onChange={handleonChange}
+              />
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+              Submit
+            </button>
+          </form>
+        </ModalComp>
+      )}
+      {openModalLogin && (
+        <ModalComp
+          title={"Sign In"}
+          isOpen={(state) => setOpenModalLogin(state)}
+        >
+          {errorMessage && <p className="text-danger">{errorMessage}</p>}
+          <form onSubmit={handleLoginUser}>
+            <div class="form-group">
+              <label for="fullname">Full Name</label>
+              <input
+                type="text"
+                class="form-control"
+                id="fullname"
+                placeholder="Enter your full name"
+                required
+                name="name"
+                onChange={handleonChange}
+              />
             </div>
 
             <div class="form-group">

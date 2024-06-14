@@ -15,14 +15,16 @@ import {
 } from "firebase/auth";
 import { auth } from "./services/firebase/config.js";
 import swal from "sweetalert";
-import { handlePopUpProvider } from "./services/providers/firebasePopUp.js";
 import { encodeUser } from "./utils/encodeJwt.js";
 import HabitsPage from "./pages/HabitsPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import { formattedErrorCode } from "./utils/FormaterErrorCode.js";
+import { Auth } from "./services/providers/provederAuth.js";
 function App() {
   const [toggle, setToggle] = useState(false);
+  const [activeNav, setActiveNav] = useState("dashboard");
   const [openModal, setOpenModal] = useState(false);
+  const [openModalLogin, setOpenModalLogin] = useState(false);
   const [comp, setComp] = useState(<Dashboard />);
   const [errMessage, setErrMessage] = useState("");
   const [formData, setformData] = useState({
@@ -70,7 +72,8 @@ function App() {
 
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
-    const response = await handlePopUpProvider(provider);
+    const authProvider = new Auth(provider);
+    const response = await authProvider.handlePopUpProvider();
     if (!response.ok) {
       const data = {
         sub: response.user.uid,
@@ -85,6 +88,7 @@ function App() {
   const handleLogout = () => {
     sessionStorage.removeItem("auth");
     localStorage.removeItem("urlProfile");
+    window.location.reload();
   };
   // Fungsi untuk menangani perubahan rute berdasarkan nilai yang diberikan
   const handleRoute = (value) => {
@@ -92,16 +96,21 @@ function App() {
     switch (value) {
       // Jika nilai adalah "dashboard", atur komponen menjadi <Dashboard />
       case "dashboard":
+        setActiveNav("dashboard");
         setComp(<Dashboard />);
         break;
 
       // Jika nilai adalah "habit", atur komponen menjadi <HabitsPage />
       case "habit":
+        setActiveNav("habit");
+
         setComp(<HabitsPage />);
         break;
 
       // Jika nilai adalah "profile", atur komponen menjadi <ProfilePage />
       case "profile":
+        setActiveNav("profile");
+
         setComp(<ProfilePage />);
         break;
 
@@ -134,13 +143,21 @@ function App() {
 
               <hr class="sidebar-divider" />
               <div class="sidebar-heading">Main</div>
-              <li class="nav-item" onClick={() => handleRoute("dashboard")}>
+              <li
+                class={`nav-item ${activeNav === "dashboard" ? "active" : ""}`}
+                onClick={() => handleRoute("dashboard")}
+                style={{ cursor: "pointer" }}
+              >
                 <span class="nav-link">
                   <i class="fas fa-fw fa-tachometer-alt"></i>
                   <span>Dashboard</span>
                 </span>
               </li>
-              <li class="nav-item active" onClick={() => handleRoute("habit")}>
+              <li
+                class={`nav-item ${activeNav === "habit" ? "active" : ""}`}
+                onClick={() => handleRoute("habit")}
+                style={{ cursor: "pointer" }}
+              >
                 <span class="nav-link ">
                   <i class="fa-regular fa-star"></i>
                   <span>Habits</span>
@@ -162,7 +179,11 @@ function App() {
                   </div>
                 </div>
               </li>
-              <li class="nav-item" onClick={() => handleRoute("profile")}>
+              <li
+                class={`nav-item ${activeNav === "profile" ? "active" : ""}`}
+                onClick={() => handleRoute("profile")}
+                style={{ cursor: "pointer" }}
+              >
                 <span class="nav-link " href="#">
                   <i class="fa-solid fa-user"></i>
                   <span>Profile</span>
@@ -175,9 +196,9 @@ function App() {
                 ></div>
               </li>
 
-              <hr class="sidebar-divider" />
-              <div class="sidebar-heading">Login</div>
-              {sessionStorage.getItem("auth") ? (
+              {/* <hr class="sidebar-divider" /> */}
+              {/* <div class="sidebar-heading">Login</div> */}
+              {sessionStorage.getItem("auth") && (
                 <li
                   class="nav-item"
                   data-bs-toggle="modal"
@@ -187,24 +208,6 @@ function App() {
                   <a class="nav-link " href="#">
                     <i class="fa-solid fa-right-to-bracket"></i>
                     <span>Logout</span>
-                  </a>
-                  <div
-                    id="collapsePages"
-                    class="collapse"
-                    aria-labelledby="headingPages"
-                    data-parent="#accordionSidebar"
-                  ></div>
-                </li>
-              ) : (
-                <li
-                  class="nav-item"
-                  data-bs-toggle="modal"
-                  data-bs-target="#exampleModal"
-                  onClick={() => setOpenModal(true)}
-                >
-                  <a class="nav-link " href="#">
-                    <i class="fa-solid fa-right-to-bracket"></i>
-                    <span>Sign In</span>
                   </a>
                   <div
                     id="collapsePages"
@@ -238,6 +241,43 @@ function App() {
                   aria-describedby="emailHelp"
                 />
               </div>
+              <div class="mb-3">
+                <label for="exampleInputPassword1" class="form-label">
+                  Password
+                </label>
+                <input
+                  onChange={handleChange}
+                  name="password"
+                  type="password"
+                  class="form-control"
+                  id="exampleInputPassword1"
+                />
+              </div>
+              <div class="mb-3 ">
+                <p>
+                  Sign In With
+                  <a
+                    href="#"
+                    className="text-primary ms-1"
+                    onClick={handleGoogleLogin}
+                  >
+                    Google
+                  </a>
+                </p>
+              </div>
+              <button type="submit" class="btn btn-primary">
+                Submit
+              </button>
+            </form>
+          </ModalComp>
+        )}
+        {openModalLogin && (
+          <ModalComp
+            title={"Sign Up"}
+            isOpen={(state) => setOpenModalLogin(state)}
+          >
+            <form onSubmit={handleOnLoginSubmit}>
+              {errMessage && <p className="text-danger">{errMessage}</p>}
               <div class="mb-3">
                 <label for="exampleInputPassword1" class="form-label">
                   Password
