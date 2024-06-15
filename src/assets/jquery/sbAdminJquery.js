@@ -331,7 +331,7 @@
       V = new RegExp("^" + I + "$"),
       G = {
         ID: new RegExp("^#(" + I + ")"),
-        CLASS: new RegExp("^\\.(" + I + ")"),
+        className: new RegExp("^\\.(" + I + ")"),
         TAG: new RegExp("^(" + I + "|[*])"),
         ATTR: new RegExp("^" + W),
         PSEUDO: new RegExp("^" + F),
@@ -439,10 +439,10 @@
             if (u[2]) return H.apply(n, e.getElementsByTagName(t)), n;
             if (
               (i = u[3]) &&
-              d.getElementsByClassName &&
-              e.getElementsByClassName
+              d.getElementsByclassNameName &&
+              e.getElementsByclassNameName
             )
-              return H.apply(n, e.getElementsByClassName(i)), n;
+              return H.apply(n, e.getElementsByclassNameName(i)), n;
           }
         if (
           d.qsa &&
@@ -580,7 +580,7 @@
               );
             })),
             (d.attributes = ce(function (e) {
-              return (e.className = "i"), !e.getAttribute("className");
+              return (e.classNameName = "i"), !e.getAttribute("classNameName");
             })),
             (d.getElementsByTagName = ce(function (e) {
               return (
@@ -588,7 +588,9 @@
                 !e.getElementsByTagName("*").length
               );
             })),
-            (d.getElementsByClassName = K.test(C.getElementsByClassName)),
+            (d.getElementsByclassNameName = K.test(
+              C.getElementsByclassNameName
+            )),
             (d.getById = ce(function (e) {
               return (
                 (a.appendChild(e).id = S),
@@ -653,11 +655,11 @@
                   }
                   return o;
                 }),
-            (b.find.CLASS =
-              d.getElementsByClassName &&
+            (b.find.className =
+              d.getElementsByclassNameName &&
               function (e, t) {
-                if ("undefined" != typeof t.getElementsByClassName && E)
-                  return t.getElementsByClassName(e);
+                if ("undefined" != typeof t.getElementsByclassNameName && E)
+                  return t.getElementsByclassNameName(e);
               }),
             (s = []),
             (v = []),
@@ -937,16 +939,16 @@
                   return e.nodeName && e.nodeName.toLowerCase() === t;
                 };
           },
-          CLASS: function (e) {
+          className: function (e) {
             var t = m[e + " "];
             return (
               t ||
               ((t = new RegExp("(^|" + M + ")" + e + "(" + M + "|$)")) &&
                 m(e, function (e) {
                   return t.test(
-                    ("string" == typeof e.className && e.className) ||
+                    ("string" == typeof e.classNameName && e.classNameName) ||
                       ("undefined" != typeof e.getAttribute &&
-                        e.getAttribute("class")) ||
+                        e.getAttribute("className")) ||
                       ""
                   );
                 }))
@@ -4192,7 +4194,7 @@
     return (e.match(P) || []).join(" ");
   }
   function gt(e) {
-    return (e.getAttribute && e.getAttribute("class")) || "";
+    return (e.getAttribute && e.getAttribute("className")) || "";
   }
   function vt(e) {
     return Array.isArray(e) ? e : ("string" == typeof e && e.match(P)) || [];
@@ -4237,7 +4239,7 @@
           },
         },
       },
-      propFix: { for: "htmlFor", class: "className" },
+      propFix: { for: "htmlFor", className: "classNameName" },
     }),
     y.optSelected ||
       (S.propHooks.selected = {
@@ -4268,7 +4270,7 @@
       }
     ),
     S.fn.extend({
-      addClass: function (t) {
+      addclassName: function (t) {
         var e,
           n,
           r,
@@ -4279,7 +4281,7 @@
           u = 0;
         if (m(t))
           return this.each(function (e) {
-            S(this).addClass(t.call(this, e, gt(this)));
+            S(this).addclassName(t.call(this, e, gt(this)));
           });
         if ((e = vt(t)).length)
           while ((n = this[u++]))
@@ -4287,11 +4289,11 @@
               a = 0;
               while ((o = e[a++]))
                 r.indexOf(" " + o + " ") < 0 && (r += o + " ");
-              i !== (s = ht(r)) && n.setAttribute("class", s);
+              i !== (s = ht(r)) && n.setAttribute("className", s);
             }
         return this;
       },
-      removeClass: function (t) {
+      removeclassName: function (t) {
         var e,
           n,
           r,
@@ -4302,9 +4304,9 @@
           u = 0;
         if (m(t))
           return this.each(function (e) {
-            S(this).removeClass(t.call(this, e, gt(this)));
+            S(this).removeclassName(t.call(this, e, gt(this)));
           });
-        if (!arguments.length) return this.attr("class", "");
+        if (!arguments.length) return this.attr("className", "");
         if ((e = vt(t)).length)
           while ((n = this[u++]))
             if (((i = gt(n)), (r = 1 === n.nodeType && " " + ht(i) + " "))) {
@@ -4312,31 +4314,31 @@
               while ((o = e[a++]))
                 while (-1 < r.indexOf(" " + o + " "))
                   r = r.replace(" " + o + " ", " ");
-              i !== (s = ht(r)) && n.setAttribute("class", s);
+              i !== (s = ht(r)) && n.setAttribute("className", s);
             }
         return this;
       },
-      toggleClass: function (i, t) {
+      toggleclassName: function (i, t) {
         var o = typeof i,
           a = "string" === o || Array.isArray(i);
         return "boolean" == typeof t && a
           ? t
-            ? this.addClass(i)
-            : this.removeClass(i)
+            ? this.addclassName(i)
+            : this.removeclassName(i)
           : m(i)
           ? this.each(function (e) {
-              S(this).toggleClass(i.call(this, e, gt(this), t), t);
+              S(this).toggleclassName(i.call(this, e, gt(this), t), t);
             })
           : this.each(function () {
               var e, t, n, r;
               if (a) {
                 (t = 0), (n = S(this)), (r = vt(i));
                 while ((e = r[t++]))
-                  n.hasClass(e) ? n.removeClass(e) : n.addClass(e);
-              } else (void 0 !== i && "boolean" !== o) || ((e = gt(this)) && Y.set(this, "__className__", e), this.setAttribute && this.setAttribute("class", e || !1 === i ? "" : Y.get(this, "__className__") || ""));
+                  n.hasclassName(e) ? n.removeclassName(e) : n.addclassName(e);
+              } else (void 0 !== i && "boolean" !== o) || ((e = gt(this)) && Y.set(this, "__classNameName__", e), this.setAttribute && this.setAttribute("className", e || !1 === i ? "" : Y.get(this, "__classNameName__") || ""));
             });
       },
-      hasClass: function (e) {
+      hasclassName: function (e) {
         var t,
           n,
           r = 0;

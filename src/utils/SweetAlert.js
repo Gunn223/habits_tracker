@@ -10,7 +10,7 @@ const confirmSwal = (title = "Login Success!", message, reload) => {
         text: "OK",
         value: true,
         visible: true,
-        className: "",
+        classNameName: "",
         closeModal: true,
       },
     },
@@ -35,7 +35,6 @@ const WarningConfirmSwal = (title, text, action, successText, rejectText) => {
           swal(successText, {
             icon: "success",
           });
-          
         } else {
           swal("Error", "Failed to delete habit.", "error");
         }

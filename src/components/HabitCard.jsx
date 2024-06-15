@@ -5,46 +5,42 @@ import { WarningConfirmSwal } from "../utils/SweetAlert";
 
 const HabitCard = ({
   data,
-  deleted,
   updateModal,
   updateddata,
   finishedHabit,
+  deleteId,
 }) => {
   const time = getAmOrPm(data.time);
 
-  const habit = new Habits();
-  const handleDeleteHabit = async (id) => {
-    try {
-      WarningConfirmSwal(
-        "Are you sure?",
-        "Once deleted, you will not be able to recover this habit!",
-        () => habit.deleteHabit(id),
-        "Habit has been deleted successfully!",
-        "Your habit is safe!"
-      );
-      deleted(id);
-    } catch (error) {
-      console.log(`error handle delete habit ${error.message}`);
-    }
-  };
   const handleModalOpen = () => {
     updateModal(true);
     updateddata(data);
   };
+  let urlImage = "";
+  if (data.habit === "running") {
+    urlImage = "running_icon.png";
+  } else if (data.habit === "read books") {
+    urlImage = "read_book.webp";
+  } else if (data.habit === "meditate") {
+    urlImage = "mediate.png";
+  } else if (data.habit === "write journal") {
+    urlImage = "mediate.png";
+  }
+
   return (
     <div
       style={{
-        width: "100%", // Menggunakan 100% agar responsif terhadap ukuran kontainer induk
-        maxWidth: "400px", // Batasan lebar maksimum agar kartu tidak terlalu lebar
-        height: "auto", // Otomatis menyesuaikan tinggi berdasarkan konten
-        padding: "20px", // Menambahkan padding untuk ruang di dalam kartu
+        width: "100%",
+        maxWidth: "300px",
+        height: "300px",
+        padding: "20px",
       }}
       className="border d-flex flex-wrap justify-content-center align-items-center bg-dark rounded-sm m-2"
     >
       <div className="d-flex flex-wrap align-items-center gap-2 w-100 justify-content-around">
         <img
-          src="/icons/running_icon.png"
-          alt="Running Man Icon"
+          src={`/icons/${urlImage}`}
+          alt={data.habit}
           style={{ width: "20%", minWidth: "100px", maxWidth: "150px" }} // Ukuran yang lebih fleksibel untuk ikon
         />
         <span className="bg-white p-1 rounded-sm">
@@ -74,7 +70,7 @@ const HabitCard = ({
           <i className="fa-solid fa-pen-to-square"></i>
         </button>
         <button
-          onClick={() => handleDeleteHabit(data.id)}
+          onClick={() => deleteId(data.id)}
           className="btn btn-outline-danger flex-grow-1"
         >
           <i className="fa-solid fa-trash"></i>

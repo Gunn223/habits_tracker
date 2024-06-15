@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from "react";
 import Todos from "../components/Todos";
 import HabitCard from "../components/HabitCard";
-import { getDateNow } from "../utils/dateFormater";
+import { convertDateFormat, getDateNow } from "../utils/dateFormater";
 import { useJwt } from "react-jwt";
 import { Habits } from "../services/db/habits";
 import ModalComp from "../components/ModalComp";
 import { confirmSwal } from "../utils/SweetAlert";
+import swal from "sweetalert";
+import { NotificationHandler } from "../utils/notification";
 
 const HabitsPage = () => {
+  const [loading, setLoading] = useState(false);
   const [dataForm, setDataForm] = useState({
     id: null,
     description: "",
@@ -18,7 +21,6 @@ const HabitsPage = () => {
     date: "",
     dateNow: "",
   });
-
   const { decodedToken, isExpired, reEvaluateToken } = useJwt(
     sessionStorage.getItem("auth")
   );
@@ -28,39 +30,62 @@ const HabitsPage = () => {
   const [deletedCard, setDeletedCard] = useState("");
   const dateNow = getDateNow();
   const habit = new Habits();
+  const [filterData, setFilterData] = useState("");
+  const dateNowFilter = filterData
+    ? convertDateFormat(filterData)
+    : new Date().toISOString().slice(0, 10);
+  const [daysStrike, setDaysStrike] = useState([]);
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const response = await habit.getHabitByIdUser(
-          decodedToken && decodedToken ? decodedToken.sub : ""
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const response = await habit.getHabitByIdUser(
+        decodedToken && decodedToken ? decodedToken.sub : ""
+      );
+      if (response.data) {
+        const filteredData = response.data.filter(
+          (item) => item.date === dateNowFilter && item.status === "unfinished"
         );
-        if (response.data) {
-          const dateNow = new Date().toISOString().slice(0, 10);
-          const filteredData = response.data.filter(
-            (item) => item.date === dateNow && item.status === "unfinished"
-          );
 
-          setData(filteredData);
-        }
-      } catch (error) {
-        console.log(`error from load data habits page ${error.message}`);
+        const filteredDaysStrike = response.data.filter(
+          (item) => item.status === "finished"
+        );
+
+        setDaysStrike(filteredDaysStrike);
+        setData(filteredData);
       }
-    };
+    } catch (error) {
+      console.log(`error from load data habits page ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
     loadData();
-  }, [decodedToken, deletedCard]);
+    return () => {
+      // clean
+    };
+  }, [decodedToken, deletedCard, dateNowFilter]);
 
   const handleUpdatedHabit = async (e) => {
     e.preventDefault();
-    const response = await habit.updateHabit(dataForm.id, dataForm);
-    if (response.statusCode === 200) {
-      confirmSwal("updated success", "update habit successful", false);
-      setDeletedCard(response);
-      setUpdateModalOpen(false);
-    }
     try {
+      setLoading(true);
+      const response = await habit.updateHabit(dataForm.id, dataForm);
+      if (response.statusCode === 200) {
+        confirmSwal(
+          "Update successful",
+          "Your habit has been successfully updated.",
+          false
+        );
+
+        setDeletedCard(response);
+        setUpdateModalOpen(false);
+      }
     } catch (error) {
       console.log(`error handleupdate habit ${error.message}`);
+    } finally {
+      setLoading(false);
     }
   };
   const handleonChange = (event) => {
@@ -72,16 +97,70 @@ const HabitsPage = () => {
     }));
   };
   const handleFinishHabit = async (data) => {
-    const response = await habit.updateHabit(data.id, data);
-    if (response.statusCode === 200) {
-      confirmSwal("updated success", "update habit successful", false);
-      setDeletedCard(response);
-    }
+    swal({
+      title: "Are you sure?",
+      text: "Once Finish, you  this habit!",
+      icon: "warning",
+      buttons: true,
+      dangerMode: true,
+    }).then(async (willDelete) => {
+      if (willDelete) {
+        const response = await habit.updateHabit(data.id, data);
+        setDeletedCard(data.id);
+
+        swal("Success!", "Your habit has been successfully Finish.", {
+          icon: "success",
+        });
+        setDeletedCard(response);
+      } else {
+        swal("Cancelled", "Your habit is not Finish.", "info");
+      }
+    });
     try {
     } catch (error) {
       console.log(`error handleFinishHabit  ${error.message}`);
     }
   };
+  const handleDeleteHabit = async (id) => {
+    try {
+      swal({
+        title: "Are you sure?",
+        text: "Once deleted, you won't be able to recover this habit!",
+        icon: "warning",
+        buttons: true,
+        dangerMode: true,
+      }).then(async (willDelete) => {
+        if (willDelete) {
+          const response = await habit.deleteHabit(id);
+          swal("Success!", "Your habit has been successfully deleted.", {
+            icon: "success",
+          });
+          setDeletedCard(response);
+        } else {
+          swal("Cancelled", "Your habit is safe.", "info");
+        }
+      });
+    } catch (error) {
+      console.log(`error handle delete habit ${error.message}`);
+    }
+  };
+  const notificationHandler = new NotificationHandler();
+  const convertdateAndTime = data.map((item) => {
+    return {
+      date: item.date,
+      time: item.time,
+      desc: item.description,
+      title: item.habit,
+    };
+  });
+  convertdateAndTime.map((data) => {
+    notificationHandler.scheduleNotification(
+      data.date,
+      data.time,
+      `Reminder for your habit '${data.title}': ${data.desc}`
+    );
+  });
+
   return (
     <div id="content-wrapper" class="d-flex flex-column">
       <div style={{ backgroundImage: "url('/images/bg-habits-banner.png')" }}>
@@ -94,29 +173,48 @@ const HabitsPage = () => {
               Today's :<span className="opacity-50 ">{dateNow}</span>
             </h2>
           </div>
-          <div className="col d-flex gap-2 align-items-center">
-            <span>
-              <img
-                src="/images/flame_icon.png"
-                alt="flame"
-                width={60}
-                className="flex-nowrap"
-              />
-            </span>
-            <span>
-              <h1 className="fw-bold">12</h1>
-              <h3 className="fw-semibold">days Streak</h3>
-            </span>
-          </div>
         </div>
       </div>
-      <Todos dateNow={dateNow} addHabit={(id) => setDeletedCard(id)}>
-        <div className="row mt-4 px-3">
-          {data &&
-            data.length > 0 &&
+      <Todos
+        dateNow={filterData || dateNow}
+        addHabit={(id) => setDeletedCard(id)}
+        setDate={(date) => setFilterData(date)}
+      >
+        <div className="row mt-4 px-3 container-fluid">
+          {loading ? (
+            <div
+              style={{
+                width: "100%",
+                maxWidth: "400px",
+                height: "auto",
+                padding: "20px",
+              }}
+              className=" border d-flex flex-wrap justify-content-center align-items-center bg-dark rounded-sm m-2"
+              aria-hidden="true"
+            >
+              <img src="..." class="card-img-top" alt="..." />
+              <div class="card-body">
+                <h5 class="card-title placeholder-glow">
+                  <span class="placeholder col-6"></span>
+                </h5>
+                <p class="card-text placeholder-glow">
+                  <span class="placeholder col-7"></span>
+                  <span class="placeholder col-4"></span>
+                  <span class="placeholder col-4"></span>
+                  <span class="placeholder col-6"></span>
+                  <span class="placeholder col-8"></span>
+                </p>
+                <a
+                  class="btn btn-primary disabled placeholder col-6"
+                  aria-disabled="true"
+                ></a>
+              </div>
+            </div>
+          ) : data.length > 0 ? (
             data.map((habit, index) => (
-              <div className="col" key={index}>
+              <div className="col-md-4" key={index}>
                 <HabitCard
+                  deleteId={(id) => handleDeleteHabit(id)}
                   updateModal={(state) => setUpdateModalOpen(state)}
                   data={habit}
                   deleted={(id) => setDeletedCard(id)}
@@ -126,7 +224,20 @@ const HabitsPage = () => {
                   }
                 />
               </div>
-            ))}
+            ))
+          ) : (
+            <div className="col text-center mt-5">
+              <div className="alert alert-warning" role="alert">
+                <i className="bi bi-emoji-frown fs-1"></i>
+                <h4 className="alert-heading">Data Kosong</h4>
+                <p>
+                  Belum ada data yang tersedia saat ini. Tambahkan data baru
+                  untuk memulai.
+                </p>
+                <hr />
+              </div>
+            </div>
+          )}
         </div>
       </Todos>
       {updateModalOpen && (
@@ -194,8 +305,18 @@ const HabitsPage = () => {
               </div>
             </div>
             <div className="modal-footer">
-              <button type="submit" className="btn btn-primary">
-                Update
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="spinner-border text-light" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                ) : (
+                  "Update"
+                )}
               </button>
             </div>
           </form>

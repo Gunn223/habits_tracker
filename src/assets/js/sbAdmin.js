@@ -7,17 +7,17 @@
 !(function (l) {
   "use strict";
   l("#sidebarToggle, #sidebarToggleTop").on("click", function (e) {
-    l("body").toggleClass("sidebar-toggled"),
-      l(".sidebar").toggleClass("toggled"),
-      l(".sidebar").hasClass("toggled") &&
+    l("body").toggleclassName("sidebar-toggled"),
+      l(".sidebar").toggleclassName("toggled"),
+      l(".sidebar").hasclassName("toggled") &&
         l(".sidebar .collapse").collapse("hide");
   }),
     l(window).resize(function () {
       l(window).width() < 768 && l(".sidebar .collapse").collapse("hide"),
         l(window).width() < 480 &&
-          !l(".sidebar").hasClass("toggled") &&
-          (l("body").addClass("sidebar-toggled"),
-          l(".sidebar").addClass("toggled"),
+          !l(".sidebar").hasclassName("toggled") &&
+          (l("body").addclassName("sidebar-toggled"),
+          l(".sidebar").addclassName("toggled"),
           l(".sidebar .collapse").collapse("hide"));
     }),
     l("#main.fixed-nav .sidebar").on(
