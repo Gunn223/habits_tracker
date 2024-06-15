@@ -53,12 +53,31 @@ const Dashboard = ({ CloseSidebar }) => {
     }));
   };
   const handlRegisterUser = async (e) => {
+    setLoading(true);
     e.preventDefault();
     try {
-      const response = await user.addUser(data.email, data.name, data.password);
-      console.log(response);
+      const res = await user.addUser(data.email, data.name, data.password);
+      console.log(res);
+      if (
+        res.statusCode === 400 ||
+        res.statusCode === 404 ||
+        res.statusCode === 500
+      ) {
+        setErrorMessage(res.message);
+
+        setTimeout(() => {
+          setErrorMessage("");
+        }, 3000);
+      }
+      if (res.statusCode == 200) {
+        setOpenModalLogin(confirmSwal("Login Success!", res.message, true));
+
+        setOpenModalLogin(false);
+      }
     } catch (error) {
-      console.log(`error handle register user`);
+      console.log(`error handle register user ${error}`);
+    } finally {
+      setLoading(false);
     }
   };
   const handleLoginUser = async (e) => {
@@ -68,7 +87,7 @@ const Dashboard = ({ CloseSidebar }) => {
 
       if (res.statusCode === 400 || res.statusCode === 404) {
         setErrorMessage(res.message);
-
+        console.log(res.message);
         setTimeout(() => {
           setErrorMessage("");
         }, 3000);
@@ -428,6 +447,8 @@ const Dashboard = ({ CloseSidebar }) => {
       )}
       {openModal && (
         <ModalComp title={"Sign Up"} isOpen={(state) => setOpenModal(state)}>
+          {errorMessage && <p className="text-danger">{errorMessage}</p>}
+
           <form onSubmit={handlRegisterUser}>
             <div className="form-group">
               <label for="fullname">Full Name</label>
@@ -453,9 +474,6 @@ const Dashboard = ({ CloseSidebar }) => {
                 required
                 onChange={handleonChange}
               />
-              <small className="form-text text-muted">
-                We'll never share your email with anyone else.
-              </small>
             </div>
 
             <div className="form-group">
@@ -471,8 +489,14 @@ const Dashboard = ({ CloseSidebar }) => {
               />
             </div>
 
-            <button type="submit" class="btn btn-primary">
-              Submit
+            <button type="submit" class="btn btn-primary" disabled={loading}>
+              {loading ? (
+                <div class="spinner-border" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+              ) : (
+                "Submit"
+              )}
             </button>
           </form>
         </ModalComp>
