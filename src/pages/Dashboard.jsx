@@ -384,7 +384,7 @@ const Dashboard = ({ CloseSidebar }) => {
             </div>
 
             <div className="row mt-3">
-              <div className="col">
+              <div className="col-md-4">
                 <Bar
                   data={{
                     labels: [
@@ -407,7 +407,7 @@ const Dashboard = ({ CloseSidebar }) => {
                   type="bar"
                 />
               </div>
-              <div className="col">
+              <div className="col-md-4">
                 <Bar
                   data={{
                     labels: taskCountsMouth,
@@ -424,7 +424,7 @@ const Dashboard = ({ CloseSidebar }) => {
                   options={{}}
                 />
               </div>
-              <div className="col ">
+              <div className="col-md-4 ">
                 <Bar
                   data={{
                     labels: labels, // Tahun-tahun
@@ -540,7 +540,7 @@ const Dashboard = ({ CloseSidebar }) => {
           </form>
         </ModalComp>
       )}
-      <footer className="sticky-footer bg-white">
+      <footer className="sticky-footer bg-white mt-5">
         <div className="container my-auto">
           <div className="copyright text-center my-auto">
             <span>Copyright &copy; Your Website 2024</span>
